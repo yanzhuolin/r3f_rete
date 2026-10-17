@@ -1,0 +1,12 @@
+import { NextResponse } from "next/server";
+import { currentUser } from "../../../../../lib/auth";
+import { addRoll } from "../../../../../lib/store";
+export async function POST(request: Request, { params }: { params: { id: string } }) {
+  const username = currentUser(); if (!username) return NextResponse.json({ error: "请先登录" }, { status: 401 });
+  const body = await request.json().catch(() => ({})); const score = Number(body.score);
+  if (!Number.isInteger(score) || score < 1 || score > 100) return NextResponse.json({ error: "Roll 点必须是 1-100 的整数" }, { status: 400 });
+  const result = await addRoll(params.id, username, score);
+  if (result.error === "NOT_FOUND") return NextResponse.json({ error: "订单不存在" }, { status: 404 });
+  if (result.error === "ALREADY_ROLLED") return NextResponse.json({ error: "你已经在这个订单中 Roll 过了", order: result.order }, { status: 409 });
+  return NextResponse.json(result, { status: 201 });
+}
