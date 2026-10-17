@@ -40,7 +40,27 @@ export default function OrderPage() {
     setOrder(data.order);
   }
 
-  function copyLink() { navigator.clipboard?.writeText(`${location.origin}/order/${id}`); alert("订单链接已复制"); }
+  async function copyLink() {
+    const link = `${location.origin}/order/${id}`;
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(link);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = link;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus(); textarea.select();
+        const copied = document.execCommand("copy");
+        document.body.removeChild(textarea);
+        if (!copied) throw new Error("copy failed");
+      }
+      alert("订单链接已复制");
+    } catch {
+      setError(`复制失败，请手动复制：${link}`);
+    }
+  }
 
   if (!order) return <div className="share-page"><div className="card share-card">正在加载订单…</div></div>;
   const already = order.rolls.some((item) => item.username.toLowerCase() === user.toLowerCase());
