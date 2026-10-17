@@ -13,6 +13,8 @@ export default function OrderPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [error, setError] = useState("");
   const [result, setResult] = useState<number | null>(null);
+  const [rolling, setRolling] = useState(false);
+  const [rollingScore, setRollingScore] = useState(1);
   const [settling, setSettling] = useState(false);
 
   useEffect(() => {
@@ -23,11 +25,18 @@ export default function OrderPage() {
   }, [id, router]);
 
   async function roll() {
+    if (rolling) return;
     setError("");
+    setRolling(true);
+    const timer = window.setInterval(() => setRollingScore(Math.floor(Math.random() * 100) + 1), 80);
+    await new Promise((resolve) => window.setTimeout(resolve, 1000));
+    window.clearInterval(timer);
     const score = Math.floor(Math.random() * 100) + 1;
+    setRollingScore(score);
     const response = await fetch(`/api/orders/${id}/roll`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ score }) });
     const data = await response.json();
-    if (!response.ok) { setError(data.error); if (data.order) setOrder(data.order); return; }
+    if (!response.ok) { setRolling(false); setError(data.error); if (data.order) setOrder(data.order); return; }
+    setRolling(false);
     setResult(data.roll.score); setOrder(data.order);
   }
 
@@ -84,7 +93,7 @@ export default function OrderPage() {
       {order.settled && <div className="notice" style={{ background: "#fff4d8", color: "#855d00" }}>订单已结算{winner ? `，最高分是 ${winner.username} 的 ${winner.score} 点` : "，暂无参与记录"}。</div>}
       {!order.settled && result !== null && <div className="score-box"><div className="sub" style={{ textAlign: "center" }}>你的 Roll 点数</div><div className="score-result">{result}</div></div>}
       {!order.settled && result === null && already && <div className="notice">你已经 Roll 过了，不能重复参与。你的记录已保存在下方。</div>}
-      {!order.settled && result === null && !already && <div className="score-box"><div className="sub" style={{ textAlign: "center", marginBottom: 16 }}>点击按钮，系统将自动生成 1–100 的随机点数</div><button className="primary" style={{ width: "100%" }} onClick={roll}>开始 Roll 点　↯</button></div>}
+      {!order.settled && result === null && !already && <div className="score-box"><div className="sub" style={{ textAlign: "center", marginBottom: 16 }}>{rolling ? "骰子滚动中…" : "点击按钮，系统将自动生成 1–100 的随机点数"}</div>{rolling && <div className="dice-result">{rollingScore}</div>}<button className="primary" style={{ width: "100%" }} onClick={roll} disabled={rolling}>{rolling ? "Rolling…" : "开始 Roll 点　↯"}</button></div>}
       {error && <div className="error">{error}</div>}
       <div className="rolls"><div className="section-head"><h2>参与记录</h2><span className="count">{order.rolls.length} 人</span></div>
         {order.rolls.length === 0 ? <div className="notice">还没有人 Roll，成为第一个参与者吧。</div> : order.rolls.map((item, index) => <div className="roll-item" key={`${item.username}-${index}`}><span>{item.username}{order.settled && winner?.username === item.username && <span className="tag" style={{ marginLeft: 8 }}>最高分</span>}</span><span className="roll-score">{item.score} 点</span></div>)}
