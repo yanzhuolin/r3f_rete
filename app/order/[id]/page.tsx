@@ -114,6 +114,7 @@ export default function OrderPage() {
       {order.imageUrl && <img className="detail-image" src={order.imageUrl} alt="奖励图片" />}
       {!order.settled && result !== null && <div className="score-box"><div className="sub" style={{ textAlign: "center" }}>你的 Roll 点数</div><div className="score-result">{result}</div></div>}
       {!order.settled && rollOpen && result === null && already && <div className="notice">你已经 Roll 过了，不能重复参与。你的记录已保存在下方。</div>}
+      {!order.settled && rollOpen && (already || result !== null) && <div className="countdown-big">剩余 <strong>{secondsLeft}</strong> 秒</div>}
       {!order.settled && rollOpen && result === null && !already && <div className="score-box"><div className="sub" style={{ textAlign: "center", marginBottom: 16 }}>{rolling ? "骰子滚动中…" : "点击按钮，系统将自动生成 1–100 的随机点数"}</div>{rolling && <div className="dice-result">{rollingScore}</div>}<button className="primary" style={{ width: "100%" }} onClick={roll} disabled={rolling}>{rolling ? "Rolling…" : "开始 Roll 点　↯"}</button><div className="countdown-big">剩余 <strong>{secondsLeft}</strong> 秒</div></div>}
       {error && <div className="error">{error}</div>}
       <div className="rolls"><div className="section-head"><h2>参与记录</h2><span className="count">{order.rolls.length} 人</span></div>
