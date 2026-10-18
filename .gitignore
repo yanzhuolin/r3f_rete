@@ -2,3 +2,4 @@ node_modules
 .next
 data/store.json
 *.log
+/public/uploads/

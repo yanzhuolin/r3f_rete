@@ -3,7 +3,7 @@ import path from "path";
 import { randomUUID } from "crypto";
 
 export type Roll = { username: string; score: number; createdAt: string };
-export type Order = { id: string; reward: string; creator: string; createdAt: string; rolls: Roll[]; settled: boolean; settledAt?: string };
+export type Order = { id: string; reward: string; creator: string; createdAt: string; rolls: Roll[]; settled: boolean; settledAt?: string; imageUrl?: string };
 type Store = { orders: Order[] };
 
 const file = path.join(process.cwd(), "data", "store.json");
@@ -19,9 +19,9 @@ async function writeStore(store: Store) {
 }
 
 export async function listOrders() { return (await readStore()).orders.sort((a, b) => b.createdAt.localeCompare(a.createdAt)); }
-export async function createOrder(reward: string, creator: string) {
+export async function createOrder(reward: string, creator: string, imageUrl?: string) {
   const store = await readStore();
-  const order: Order = { id: randomUUID().replaceAll("-", "").slice(0, 12), reward, creator, createdAt: new Date().toISOString(), rolls: [], settled: false };
+  const order: Order = { id: randomUUID().replaceAll("-", "").slice(0, 12), reward, creator, createdAt: new Date().toISOString(), rolls: [], settled: false, imageUrl };
   store.orders.push(order); await writeStore(store); return order;
 }
 export async function getOrder(id: string) { return (await readStore()).orders.find((item) => item.id === id) ?? null; }

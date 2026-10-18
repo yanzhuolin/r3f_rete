@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 type Roll = { username: string; score: number };
-type Order = { id: string; reward: string; creator: string; settled?: boolean; rolls: Roll[] };
+type Order = { id: string; reward: string; creator: string; imageUrl?: string; settled?: boolean; rolls: Roll[] };
 
 export default function OrderPage() {
   const { id } = useParams<{ id: string }>();
@@ -91,6 +91,7 @@ export default function OrderPage() {
         </div>
       </div>
       {order.settled && <div className="notice" style={{ background: "#fff4d8", color: "#855d00" }}>订单已结算{winner ? `，最高分是 ${winner.username} 的 ${winner.score} 点` : "，暂无参与记录"}。</div>}
+      {order.imageUrl && <img className="detail-image" src={order.imageUrl} alt="奖励图片" />}
       {!order.settled && result !== null && <div className="score-box"><div className="sub" style={{ textAlign: "center" }}>你的 Roll 点数</div><div className="score-result">{result}</div></div>}
       {!order.settled && result === null && already && <div className="notice">你已经 Roll 过了，不能重复参与。你的记录已保存在下方。</div>}
       {!order.settled && result === null && !already && <div className="score-box"><div className="sub" style={{ textAlign: "center", marginBottom: 16 }}>{rolling ? "骰子滚动中…" : "点击按钮，系统将自动生成 1–100 的随机点数"}</div>{rolling && <div className="dice-result">{rollingScore}</div>}<button className="primary" style={{ width: "100%" }} onClick={roll} disabled={rolling}>{rolling ? "Rolling…" : "开始 Roll 点　↯"}</button></div>}
