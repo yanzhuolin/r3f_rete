@@ -3,7 +3,7 @@ import path from "path";
 import { randomUUID } from "crypto";
 
 export type Roll = { username: string; score: number; createdAt: string };
-export type Order = { id: string; reward: string; creator: string; createdAt: string; rolls: Roll[]; settled: boolean; settledAt?: string; ended?: boolean; endedAt?: string; rollEndsAt?: string; settleAt?: string; imageUrl?: string };
+export type Order = { id: string; reward: string; creator: string; createdAt: string; rolls: Roll[]; settled: boolean; settledAt?: string; ended?: boolean; endedAt?: string; rollEndsAt?: string; imageUrl?: string };
 type Store = { orders: Order[] };
 
 const file = path.join(process.cwd(), "data", "store.json");
@@ -19,7 +19,8 @@ async function writeStore(store: Store) {
 }
 
 function syncOrder(order: Order) {
-  if (!order.settled && order.settleAt && Date.now() >= Date.parse(order.settleAt)) {
+  const deadline = order.rollEndsAt ?? (order as Order & { settleAt?: string }).settleAt;
+  if (!order.settled && deadline && Date.now() >= Date.parse(deadline)) {
     order.settled = true; order.settledAt = new Date().toISOString(); return true;
   }
   return false;
@@ -28,8 +29,8 @@ export async function listOrders() { const store = await readStore(); const chan
 export async function createOrder(reward: string, creator: string, imageUrl?: string) {
   const store = await readStore();
   const createdAt = new Date();
-  const rollEndsAt = new Date(createdAt.getTime() + 20_000).toISOString();
-  const order: Order = { id: randomUUID().replaceAll("-", "").slice(0, 12), reward, creator, createdAt: createdAt.toISOString(), rolls: [], settled: false, rollEndsAt, settleAt: rollEndsAt, imageUrl };
+  const rollEndsAt = new Date(createdAt.getTime() + 120_000).toISOString();
+  const order: Order = { id: randomUUID().replaceAll("-", "").slice(0, 12), reward, creator, createdAt: createdAt.toISOString(), rolls: [], settled: false, rollEndsAt, imageUrl };
   store.orders.push(order); await writeStore(store); return order;
 }
 export async function getOrder(id: string) { const store = await readStore(); const order = store.orders.find((item) => item.id === id) ?? null; if (order && syncOrder(order)) await writeStore(store); return order; }
@@ -38,7 +39,8 @@ export async function addRoll(id: string, username: string, score: number) {
   const order = store.orders.find((item) => item.id === id);
   if (!order) return { error: "NOT_FOUND" as const };
   const now = Date.now();
-  if (!order.settled && order.settleAt && now >= Date.parse(order.settleAt)) { order.settled = true; order.settledAt = new Date().toISOString(); }
+  const deadline = order.rollEndsAt ?? (order as Order & { settleAt?: string }).settleAt;
+  if (!order.settled && deadline && now >= Date.parse(deadline)) { order.settled = true; order.settledAt = new Date().toISOString(); }
   if (order.settled) { await writeStore(store); return { error: "SETTLED" as const, order }; }
   if (order.rollEndsAt && now >= Date.parse(order.rollEndsAt)) return { error: "ROLL_CLOSED" as const, order };
   if (order.rolls.some((roll) => roll.username.toLowerCase() === username.toLowerCase())) return { error: "ALREADY_ROLLED" as const, order };

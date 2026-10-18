@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 type Roll = { username: string; score: number };
-type Order = { id: string; reward: string; creator: string; imageUrl?: string; settled?: boolean; ended?: boolean; rollEndsAt?: string; settleAt?: string; rolls: Roll[] };
+type Order = { id: string; reward: string; creator: string; imageUrl?: string; settled?: boolean; ended?: boolean; rollEndsAt?: string; rolls: Roll[] };
 
 export default function OrderPage() {
   const { id } = useParams<{ id: string }>();
@@ -102,14 +102,14 @@ export default function OrderPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", gap: 16, flexWrap: "wrap" }}>
         <div><h1>{order.reward}</h1><p className="sub">由 {order.creator} 发起 · 每人只有一次机会</p></div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {isCreator && !order.settled && !order.settleAt && <button className="primary link-btn" onClick={settle} disabled={settling}>{settling ? "结算中…" : "结算订单"}</button>}
+          {isCreator && !order.settled && !order.rollEndsAt && <button className="primary link-btn" onClick={settle} disabled={settling}>{settling ? "结算中…" : "结算订单"}</button>}
           {isCreator && order.settled && !order.ended && <button className="primary link-btn" onClick={endOrder} disabled={ending}>{ending ? "结束中…" : "完成发货并结束"}</button>}
           <button className="secondary link-btn" onClick={copyLink}>复制分享链接</button>
         </div>
       </div>
       {order.ended && <div className="notice" style={{ background: "#e9f8ef", color: "#247044" }}>订单已结束。</div>}
       {order.settled && !order.ended && <div className="notice" style={{ background: "#fff4d8", color: "#855d00" }}>订单已自动结算{winner ? `，最高分是 ${winner.username} 的 ${winner.score} 点` : "，暂无参与记录"}。请发起者完成发货后结束订单。</div>}
-      {!order.settled && !rollOpen && <div className="notice" style={{ background: "#fff4d8", color: "#855d00" }}>Roll 点已截止，订单正在自动结算{order.settleAt ? `（${new Date(order.settleAt).toLocaleTimeString()}）` : ""}。</div>}
+      {!order.settled && !rollOpen && <div className="notice" style={{ background: "#fff4d8", color: "#855d00" }}>Roll 点已截止，订单正在自动结算{order.rollEndsAt ? `（${new Date(order.rollEndsAt).toLocaleTimeString()}）` : ""}。</div>}
       {order.imageUrl && <img className="detail-image" src={order.imageUrl} alt="奖励图片" />}
       {!order.settled && result !== null && <div className="score-box"><div className="sub" style={{ textAlign: "center" }}>你的 Roll 点数</div><div className="score-result">{result}</div></div>}
       {!order.settled && rollOpen && result === null && already && <div className="notice">你已经 Roll 过了，不能重复参与。你的记录已保存在下方。</div>}
