@@ -7,7 +7,8 @@ type Roll = { username: string; score: number };
 type Order = { id: string; reward: string; creator: string; imageUrl?: string; settled?: boolean; ended?: boolean; rollEndsAt?: string; rolls: Roll[] };
 
 export default function OrderPage() {
-  const { id } = useParams<{ id: string }>();
+  const { id: routeId } = useParams<{ id: string }>();
+  const id = routeId.split("-")[0];
   const router = useRouter();
   const [user, setUser] = useState("");
   const [order, setOrder] = useState<Order | null>(null);
@@ -21,13 +22,13 @@ export default function OrderPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem("roll_user");
-    if (!saved) { router.replace(`/login?from=/order/${id}`); return; }
+    if (!saved) { router.replace(`/login?from=/order/${routeId}`); return; }
     setUser(saved);
     const load = () => fetch(`/api/orders/${id}`).then((r) => r.json()).then((d) => d.order && setOrder(d.order));
     load();
     const timer = window.setInterval(() => { setNow(Date.now()); load(); }, 1000);
     return () => window.clearInterval(timer);
-  }, [id, router]);
+  }, [id, routeId, router]);
 
   async function roll() {
     if (rolling) return;
@@ -64,7 +65,7 @@ export default function OrderPage() {
   }
 
   async function copyLink() {
-    const link = `${location.origin}/order/${id}`;
+    const link = `${location.origin}/order/${id}\n${order?.reward || "订单"}`;
     try {
       if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(link);
