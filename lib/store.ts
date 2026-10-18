@@ -63,3 +63,17 @@ export async function endOrder(id: string, username: string) {
   if (order.ended) return { error: "ALREADY_ENDED" as const, order };
   order.ended = true; order.endedAt = new Date().toISOString(); await writeStore(store); return { order };
 }
+
+export async function deleteOrder(id: string, username: string) {
+  const store = await readStore();
+  const index = store.orders.findIndex((item) => item.id === id);
+  if (index === -1) return { error: "NOT_FOUND" as const };
+  const order = store.orders[index];
+  if (order.creator.toLowerCase() !== username.toLowerCase()) return { error: "FORBIDDEN" as const };
+  store.orders.splice(index, 1); await writeStore(store);
+  if (order.imageUrl) {
+    const filename = path.basename(order.imageUrl);
+    await fs.unlink(path.join(process.cwd(), "public", "uploads", filename)).catch(() => undefined);
+  }
+  return { order };
+}
